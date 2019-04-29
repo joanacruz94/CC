@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package client;
+package Client;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -30,7 +30,6 @@ public class ClientMain {
                 System.out.print(">PTR ");
                 input = scanner.nextLine();
                 client.sendMessage(input);
-                //System.out.println("Press enter to continue");
                 scanner.nextLine();          
             } while (!input.equals("exit"));
             client.close();
