@@ -11,8 +11,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -27,33 +25,34 @@ public class ServerAgentUDP extends Thread {
 
  
     public ServerAgentUDP() throws SocketException {
-        socket = new DatagramSocket(4445);
+        this.socket = new DatagramSocket(7777);
+        this.receiveBuf = new byte[256];
+        this.sendBuf  = new byte[256];
     }
  
     public void run() {
         running = true;
         try {
             while (running) {
-                this.receiveBuf = new byte[256];
-                this.sendBuf  = new byte[256];
                 DatagramPacket packetReceveid = new DatagramPacket(this.receiveBuf, this.receiveBuf.length);
                 socket.receive(packetReceveid);
-                int message = ByteBuffer.wrap(packetReceveid.getData()).getInt();
+                
                 InetAddress address = packetReceveid.getAddress();
                 int port = packetReceveid.getPort();
-                this.sendBuf = ByteBuffer.allocate(15).putInt(message).array();
+                
+                String received = new String(packetReceveid.getData(), 0, packetReceveid.getLength());
+                System.out.println(received);
+                
+                this.sendBuf = received.getBytes();
                 DatagramPacket packetSent = new DatagramPacket(this.sendBuf, this.sendBuf.length, address, port);
-                String received = new String(packetSent.getData(), 0, packetSent.getLength());
+                socket.send(packetSent);
+                
                 if(received.equals("exit")){
                     running = false;
-                    continue;
+                    socket.close();
                 }
-                System.out.println(received);
-                socket.send(packetSent);
             }
         } catch (IOException ex) {
         }
-        socket.close();
-        System.out.println("Acabou");
     }
 }

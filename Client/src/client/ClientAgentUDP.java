@@ -12,24 +12,31 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
-public class ClientAgentUDP {
+public class ClientAgentUDP extends Thread{
     private DatagramSocket socket;
     private InetAddress address;
-    private byte[] buf;
+    private byte[] sendbuf;
+    private byte[] receivebuf;
  
-    public ClientAgentUDP() throws SocketException, UnknownHostException {
-        this.socket = new DatagramSocket();
+    public ClientAgentUDP(int port) throws SocketException, UnknownHostException {
+        this.socket = new DatagramSocket(port);
         this.address = InetAddress.getByName("localhost");
+        this.sendbuf = new byte[256];
+        this.receivebuf = new byte[256];
     }
- 
+
+    public DatagramSocket getSocket() {
+        return socket;
+    }
+    
     public void sendMessage(String msg) throws IOException{
-        this.buf = msg.getBytes();
-        DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length, this.address, 4445);
+        this.sendbuf = msg.getBytes();
+        DatagramPacket packet = new DatagramPacket(this.sendbuf, this.sendbuf.length, this.address, 7777);
         this.socket.send(packet);
     }
     
-    public String receiveMessage(DatagramPacket packet) throws IOException{
-        //packet = new DatagramPacket(buf, buf.length);
+    public String receiveMessage() throws IOException{
+        DatagramPacket packet = new DatagramPacket(receivebuf, receivebuf.length);
         socket.receive(packet);
         String received = new String(packet.getData(), 0, packet.getLength());
         return received;
@@ -37,5 +44,18 @@ public class ClientAgentUDP {
  
     public void close() {
         socket.close();
+    }
+    
+    public void run(){
+        try{
+            boolean running = true;
+            while(running){
+                String receivedMessage = receiveMessage();
+                System.out.println(receivedMessage);
+            }
+        
+        }
+        catch (IOException ex){
+        }
     }
 }

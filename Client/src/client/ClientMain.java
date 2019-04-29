@@ -6,39 +6,33 @@
 package client;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 
 /**
  *
  * @author joanacruz
  */
 public class ClientMain {
-        /**
-     * @param args the command line arguments
-     */
+    private static Scanner scanner = new Scanner(System.in);
+
     public static void main(String[] args) throws IOException {
-        ClientAgentUDP client = new ClientAgentUDP();
         
-        try {            
-            String input, serverAnswer;
+        ClientAgentUDP client = new ClientAgentUDP(5000);
+        client.start();
+        String input;
+        
+        try { 
             do {
-                input = UI.showWelcomeMenu();
-                switch (input) {
-                    case "download":
-                        String file = UI.showDownloadMenu();
-                        System.out.println("TO SERVER");
-                        System.out.println("download " + file);
-                        client.sendMessage("download " + file);
-                        break;
-                    case "upload":
-                        break;
-                    case "exit":
-                        System.out.println("ByeBye");
-                        break;
-                }
+                System.out.print(">PTR ");
+                input = scanner.nextLine();
+                client.sendMessage(input);
+                //System.out.println("Press enter to continue");
+                scanner.nextLine();          
             } while (!input.equals("exit"));
-            client.sendMessage("exit");
             client.close();
         } catch (Exception e) {
             e.printStackTrace();
