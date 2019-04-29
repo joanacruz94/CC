@@ -6,10 +6,6 @@
 package Client;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 
 /**
@@ -27,7 +23,7 @@ public class ClientMain {
         
         try { 
             do {
-                System.out.print(">PTR ");
+                System.out.print("JOE > ");
                 input = scanner.nextLine();
                 client.sendMessage(input);
                 scanner.nextLine();          

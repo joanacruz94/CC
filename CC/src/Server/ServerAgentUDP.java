@@ -5,12 +5,12 @@
  */
 package Server;
 
+import Common.PDU;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.nio.ByteBuffer;
 
 /**
  *
@@ -36,6 +36,11 @@ public class ServerAgentUDP extends Thread {
             while (running) {
                 DatagramPacket packetReceveid = new DatagramPacket(this.receiveBuf, this.receiveBuf.length);
                 socket.receive(packetReceveid);
+                
+                PDU pdu = new PDU();
+                
+                pdu.byteToPDU(this.receiveBuf);
+                System.out.println(pdu.getSeqNumber());
                 
                 InetAddress address = packetReceveid.getAddress();
                 int port = packetReceveid.getPort();
