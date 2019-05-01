@@ -5,6 +5,7 @@
  */
 package Client;
 
+import Common.PDU;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -15,6 +16,7 @@ import java.net.UnknownHostException;
 public class ClientAgentUDP extends Thread{
     private DatagramSocket socket;
     private InetAddress address;
+    private PDU packet;
     private byte[] sendbuf;
     private byte[] receivebuf;
  
@@ -24,9 +26,11 @@ public class ClientAgentUDP extends Thread{
         this.sendbuf = new byte[256];
         this.receivebuf = new byte[256];
     }
-
-    public DatagramSocket getSocket() {
-        return socket;
+    
+    public void sendPDU(PDU pdu) throws IOException{
+        this.sendbuf = pdu.PDUtoByte();
+        DatagramPacket packet = new DatagramPacket(this.sendbuf, this.sendbuf.length, this.address, 7777);
+        this.socket.send(packet);
     }
     
     public void sendMessage(String msg) throws IOException{

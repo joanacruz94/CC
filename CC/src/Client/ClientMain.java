@@ -5,6 +5,7 @@
  */
 package Client;
 
+import Common.PDU;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -21,11 +22,17 @@ public class ClientMain {
         client.start();
         String input;
         
-        try { 
+        try {
+            PDU connection = new PDU();
+            String conn = "Connection establish";
+            connection.setDataPacket(conn.getBytes());
+            connection.setSeqNumber(3);
+            connection.setFlag(0);
+            client.sendPDU(connection);
             do {
                 System.out.print("JOE > ");
                 input = scanner.nextLine();
-                client.sendMessage(input);
+                //client.sendMessage(input);
                 scanner.nextLine();          
             } while (!input.equals("exit"));
             client.close();

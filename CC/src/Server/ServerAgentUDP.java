@@ -40,18 +40,25 @@ public class ServerAgentUDP extends Thread {
                 PDU pdu = new PDU();
                 
                 pdu.byteToPDU(this.receiveBuf);
+                System.out.println(pdu.getFlag());
                 System.out.println(pdu.getSeqNumber());
                 
                 InetAddress address = packetReceveid.getAddress();
                 int port = packetReceveid.getPort();
                 
                 String received = new String(packetReceveid.getData(), 0, packetReceveid.getLength());
-                System.out.println(received);
+                //System.out.println(received);
                 
-                this.sendBuf = received.getBytes();
-                DatagramPacket packetSent = new DatagramPacket(this.sendBuf, this.sendBuf.length, address, port);
-                socket.send(packetSent);
-                
+                if(received.matches("download [A-Za-z.]+")){
+                    this.sendBuf = received.toUpperCase().getBytes();
+                    pdu.setSeqNumber(pdu.intfromByte(this.sendBuf));
+                    System.out.println("Enviei número de sequência" + pdu.getSeqNumber());
+                    DatagramPacket packetSent = new DatagramPacket(this.sendBuf, this.sendBuf.length, address, port);
+                    socket.send(packetSent);
+                }
+                if(received.matches("upload [A-Za-z.]+")){
+                    
+                }
                 if(received.equals("exit")){
                     running = false;
                     socket.close();
