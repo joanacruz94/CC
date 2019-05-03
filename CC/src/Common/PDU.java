@@ -15,18 +15,40 @@ import java.util.Arrays;
 public class PDU {
     private int seqNumber;
     private int ackNumber;
-    private int flag;
-    private byte[] dataPacket;
-    private int lengthPacket;
-    private int totalSize;
+    private int flagType;
+    private String messagePacket;
+    private byte[] dataFile;
 
     public PDU() {
         this.seqNumber = 0;
         this.ackNumber = 0;
-        this.flag = 0;
-        this.dataPacket = new byte[1040];
-        this.lengthPacket = this.dataPacket.length;
-        this.totalSize = this.lengthPacket + 9;
+        this.flagType = 0;
+        this.messagePacket = "";
+        this.dataFile = new byte[256];
+    }
+    
+    /*
+    public PDU(byte[] dataPacket) {
+        this.seqNumber = ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 0, 4)).getInt();
+        this.ackNumber = ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 4, 8)).getInt();
+        this.flagType = ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 8, 12)).getInt();
+        byte[] message = trim(dataPacket);
+        this.messagePacket = new String(ByteBuffer.wrap(Arrays.copyOfRange(message, 12, message.length)).array());
+    }*/
+
+    public PDU(int seqNumber, int ackNumber, int flagType, String messagePacket) {
+        this.seqNumber = seqNumber;
+        this.ackNumber = ackNumber;
+        this.flagType = flagType;
+        this.messagePacket = messagePacket;
+    }
+    
+    static byte[] trim(byte[] bytes) {
+        int i = bytes.length - 1;
+        while (i >= 0 && bytes[i] == 0){
+            --i;
+        }
+        return Arrays.copyOf(bytes, i + 1);
     }
 
     public int getSeqNumber() {
@@ -45,63 +67,61 @@ public class PDU {
         this.ackNumber = ackNumber;
     }
 
-    public int getFlag() {
-        return flag;
+    public int getFlagType() {
+        return flagType;
     }
 
-    public void setFlag(int flag) {
-        this.flag = flag;
+    public void setFlagType(int flagType) {
+        this.flagType = flagType;
     }
 
-    public byte[] getDataPacket() {
-        return dataPacket;
+    public String getMessagePacket() {
+        return messagePacket;
     }
 
-    public void setDataPacket(byte[] dataPacket) {
-        this.dataPacket = dataPacket;
+    public void setMessagePacket(String messagePacket) {
+        this.messagePacket = messagePacket;
     }
     
-    public int intfromByte(byte[] sizebytes){
-        ByteBuffer wrapped = ByteBuffer.wrap(sizebytes);
-        return wrapped.getInt(); 
-    }
-	 
-    public byte[] bytefromInt(int integer){
-        ByteBuffer dbuf = ByteBuffer.allocate(4);
-        dbuf.putInt(integer);
-        return  dbuf.array();
-    }
-    
-    public byte[] PDUtoByte(){
-        byte[] arrayFinal = new byte[this.lengthPacket + 9];
-        byte[] seqNum = bytefromInt(this.seqNumber);
-        byte[] ack = bytefromInt(this.ackNumber);
-        byte[] flag = bytefromInt(this.flag);
-        
-        for(int i = 0; i < 4; i++){
-            arrayFinal[i] = seqNum[i];
+    public String getTypeOfPDU(){
+        String result;
+        switch(this.flagType){
+            case 0:
+                result = "SYN";
+                break;
+            case 1:
+                result = "ACK";
+                break;
+            case 2:
+                result = "PSH";
+                break;
+            case 3:
+                result = "FIN";
+                break;
+            default:
+                result = "NOTHING";
         }
-        
-        for(int i = 0; i < 4; i++){
-            arrayFinal[i + 4] = ack[i];
-        }
-        
-        for(int i = 0; i < 4; i++){
-            arrayFinal[i + 8] = flag[i];
-        }
-        
-        for(int i = 0; i < 4; i++){
-            arrayFinal[i+9] = this.dataPacket[i];
-        }
-        
-        return arrayFinal;
+        return result;
     }
     
-    public void byteToPDU(byte[] array){
-        this.setSeqNumber(intfromByte(Arrays.copyOfRange(array, 0, 4)));
-        System.out.println(this.getSeqNumber());
-        this.setAckNumber(intfromByte(Arrays.copyOfRange(array, 4, 8)));
-        this.setDataPacket(Arrays.copyOfRange(array, 8, array.length));
+    public byte[] PDUToByte(){
+        byte[] seqNum = ByteBuffer.allocate(4).putInt(this.getSeqNumber()).array();
+        byte[] ackNum = ByteBuffer.allocate(4).putInt(this.getAckNumber()).array();
+        byte[] flag = ByteBuffer.allocate(4).putInt(this.getFlagType()).array();
+        ByteBuffer buffer = ByteBuffer.allocate(12 + this.getMessagePacket().getBytes().length);
+        buffer.put(seqNum);
+        buffer.put(ackNum);
+        buffer.put(flag);
+        buffer.put(this.getMessagePacket().getBytes());
         
+        return buffer.array();
+    }
+    
+    public void ByteToPDU(byte[] dataPacket){
+        this.setSeqNumber(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 0, 4)).getInt());
+        this.setAckNumber(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 4, 8)).getInt());
+        this.setFlagType(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 8, 12)).getInt());
+        byte[] message = trim(dataPacket);
+        this.setMessagePacket(new String(ByteBuffer.wrap(Arrays.copyOfRange(message, 12, message.length)).array()));
     }
 }

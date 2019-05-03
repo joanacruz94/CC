@@ -23,17 +23,13 @@ public class ClientMain {
         String input;
         
         try {
-            PDU connection = new PDU();
-            String conn = "Connection establish";
-            connection.setDataPacket(conn.getBytes());
-            connection.setSeqNumber(3);
-            connection.setFlag(0);
-            client.sendPDU(connection);
+            PDU connection = new PDU(0,0,0,"Olá meu amigo!");
+            client.send(connection.PDUToByte());
             do {
-                System.out.print("JOE > ");
+                //System.out.print("JOE > ");
                 input = scanner.nextLine();
-                //client.sendMessage(input);
-                scanner.nextLine();          
+                connection.setMessagePacket(input);
+                client.send(connection.PDUToByte());
             } while (!input.equals("exit"));
             client.close();
         } catch (Exception e) {
