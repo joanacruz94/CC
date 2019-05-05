@@ -16,15 +16,17 @@ public class PDU {
     private int seqNumber;
     private int ackNumber;
     private int flagType;
+    private int port;
     private String messagePacket;
-    private byte[] dataFile;
+    private int lengthData;
 
     public PDU() {
         this.seqNumber = 0;
         this.ackNumber = 0;
         this.flagType = 0;
+        this.port = 0;
         this.messagePacket = "";
-        this.dataFile = new byte[256];
+        this.lengthData = 0;
     }
     
     /*
@@ -41,6 +43,8 @@ public class PDU {
         this.ackNumber = ackNumber;
         this.flagType = flagType;
         this.messagePacket = messagePacket;
+        this.lengthData = messagePacket.getBytes().length;
+        this.port = 0;
     }
     
     static byte[] trim(byte[] bytes) {
@@ -82,6 +86,22 @@ public class PDU {
     public void setMessagePacket(String messagePacket) {
         this.messagePacket = messagePacket;
     }
+
+    public int getLengthData() {
+        return lengthData;
+    }
+
+    public void setLengthData(int lengthData) {
+        this.lengthData = lengthData;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
     
     public String getTypeOfPDU(){
         String result;
@@ -98,20 +118,64 @@ public class PDU {
             case 3:
                 result = "FIN";
                 break;
+            case 4:
+                result = "SYN + ACK";
+                break;
+            case 5:
+                result = "JOE DOWN";
+                break;
+            case 6:
+                result = "JOE UP";
+                break;
+            case 7:
+                result = "EXIT";
+                break;
             default:
                 result = "NOTHING";
         }
         return result;
     }
     
+    public void sendProtocolar(String message){
+        String m = message.split(" ")[0];
+        
+        if(m.equals("download"))
+            this.setFlagType(5);
+        else if(m.equals("upload"))
+            this.setFlagType(6);
+        else 
+            this.setFlagType(7);
+
+        this.setAckNumber(1);
+        this.setSeqNumber(1);
+        this.setMessagePacket(message);
+        this.setLengthData(message.getBytes().length);
+    }
+        
+    public void sendACK(){
+        int previousAck = this.ackNumber;
+        this.setAckNumber(this.seqNumber + this.lengthData);
+        this.setSeqNumber(previousAck);
+        this.setFlagType(1);
+        this.setMessagePacket("A");
+        this.setLengthData(1);
+    }
+    
+    public void sendSYNACK(int clientPort){
+        this.setSeqNumber(0);
+        this.setAckNumber(1);
+        this.setFlagType(4);
+        this.setMessagePacket("S");
+        this.setPort(clientPort);
+    }
+        
     public byte[] PDUToByte(){
-        byte[] seqNum = ByteBuffer.allocate(4).putInt(this.getSeqNumber()).array();
-        byte[] ackNum = ByteBuffer.allocate(4).putInt(this.getAckNumber()).array();
-        byte[] flag = ByteBuffer.allocate(4).putInt(this.getFlagType()).array();
-        ByteBuffer buffer = ByteBuffer.allocate(12 + this.getMessagePacket().getBytes().length);
-        buffer.put(seqNum);
-        buffer.put(ackNum);
-        buffer.put(flag);
+        ByteBuffer buffer = ByteBuffer.allocate(20 + this.getMessagePacket().getBytes().length);
+        buffer.put(ByteBuffer.allocate(4).putInt(this.getSeqNumber()).array());
+        buffer.put(ByteBuffer.allocate(4).putInt(this.getAckNumber()).array());
+        buffer.put(ByteBuffer.allocate(4).putInt(this.getFlagType()).array());
+        buffer.put(ByteBuffer.allocate(4).putInt(this.getLengthData()).array());
+        buffer.put(ByteBuffer.allocate(4).putInt(this.getPort()).array());
         buffer.put(this.getMessagePacket().getBytes());
         
         return buffer.array();
@@ -121,7 +185,9 @@ public class PDU {
         this.setSeqNumber(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 0, 4)).getInt());
         this.setAckNumber(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 4, 8)).getInt());
         this.setFlagType(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 8, 12)).getInt());
+        this.setLengthData(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 12, 16)).getInt());
+        this.setPort(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 16, 20)).getInt());
         byte[] message = trim(dataPacket);
-        this.setMessagePacket(new String(ByteBuffer.wrap(Arrays.copyOfRange(message, 12, message.length)).array()));
+        this.setMessagePacket(new String(ByteBuffer.wrap(Arrays.copyOfRange(message, 20, message.length)).array()));
     }
 }

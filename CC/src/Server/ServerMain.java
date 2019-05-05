@@ -16,6 +16,8 @@ public class ServerMain {
 
     /**
      * @param args the command line arguments
+     * @throws java.net.SocketException
+     * @throws java.net.UnknownHostException
      */
     
     public static void main(String[] args) throws SocketException, UnknownHostException {

@@ -15,23 +15,25 @@ import java.util.Scanner;
  */
 public class ClientMain {
     private static Scanner scanner = new Scanner(System.in);
+    private static String input;
+
 
     public static void main(String[] args) throws IOException {
-        
-        ClientAgentUDP client = new ClientAgentUDP(5000);
+        System.out.println("Type the port number");
+        input = scanner.nextLine();
+        ClientAgent client = new ClientAgent(Integer.parseInt(input));
         client.start();
-        String input;
         
-        try {
-            PDU connection = new PDU(0,0,0,"Olá meu amigo!");
-            client.send(connection.PDUToByte());
+        try {            
+            PDU pdu = new PDU();
             do {
                 //System.out.print("JOE > ");
                 input = scanner.nextLine();
-                connection.setMessagePacket(input);
-                client.send(connection.PDUToByte());
+                pdu.sendProtocolar(input);
+                client.setPacket(pdu);
+                client.send();
             } while (!input.equals("exit"));
-            client.close();
+            client.closeConnection();
         } catch (Exception e) {
             e.printStackTrace();
         }
