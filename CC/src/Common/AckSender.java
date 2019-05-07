@@ -1,0 +1,56 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Common;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ *
+ * @author joanacruz
+ */
+public class AckSender extends Thread{
+    private Resources connResources;
+    private PDU packet;
+    private Map<Integer, PDU> packetsList;
+    private byte[] buffer;
+    private AtomicBoolean transferComplete;
+    
+    public AckSender(Resources connection, Map<Integer, PDU> packets, AtomicBoolean transfer) throws UnknownHostException, SocketException{
+        connResources = connection;
+        packet = new PDU();
+        buffer = new byte[256];
+        packetsList = packets;
+        transferComplete = transfer;
+    }
+    
+    
+    @Override
+    public void run(){
+        try {
+            boolean running = true;
+            int dataFile = 0;
+            
+            while(transferComplete.get()){
+                Collection<PDU> receivedPDUs = packetsList.values();
+                for(PDU pdu : receivedPDUs){
+                    packet = pdu;
+                    packet.ackPacket();
+                    connResources.send(packet);
+                    packetsList.remove(packet.getSeqNumber());
+                }
+            }
+        } catch (Exception ex){
+            ex.printStackTrace();
+        } 
+    }
+}

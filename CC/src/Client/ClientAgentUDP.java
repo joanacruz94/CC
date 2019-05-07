@@ -6,92 +6,85 @@
 package Client;
 
 import Common.PDU;
-import java.io.File;
-import java.io.FileOutputStream;
+import Common.FileReceiver;
+import Common.Resources;
+import Common.AckSender;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  * @author joanacruz
  */
 public class ClientAgentUDP extends Thread{
-    private final DatagramSocket socket;
-    private final InetAddress address;
-    private final PDU packet;
-    private int port = 7777;
-    private byte[] sendBuf;
-    private byte[] receiveBuf;
+    private final int portSend = 7777;
+    private PDU packet;
+    private Resources connResources;
+    private byte[] buffer;
+    private Map<Integer, PDU> packetsList;
     
-    public ClientAgentUDP(int port) throws SocketException, UnknownHostException {
-        this.socket = new DatagramSocket(port);
-        this.address = InetAddress.getByName("localhost");
-        this.packet = new PDU();
-        this.sendBuf = new byte[256];
-        this.receiveBuf = new byte[256];
+    public ClientAgentUDP(int port) throws UnknownHostException, SocketException{
+        packet = new PDU();
+        connResources = new Resources(port, InetAddress.getByName("localhost"));
+        connResources.setPortSend(portSend);
+        buffer = new byte[256];
+        packetsList = new ConcurrentHashMap<>();
+    }
+    
+    public void setPacket(PDU pdu){
+        packet = pdu;
+    }
+
+    public PDU getPacket() {
+        return packet;
+    }
+    
+    public void send() throws IOException{
+        connResources.send(packet);
     }
     
     private void sendSynPacket() throws IOException{
-        this.packet.setMessagePacket("S");
-        send(this.packet.PDUToByte());
+        packet.setMessagePacket("S");
+        connResources.send(packet);
     }
     
-    public void send(byte[] buffer) throws IOException{
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.address, port);
-        this.socket.send(packet);
+    public void closeConnection(){
+        connResources.close();
     }
     
-    public void receive() throws IOException{
-        DatagramPacket packet = new DatagramPacket(this.receiveBuf, this.receiveBuf.length);
-        socket.receive(packet);    
-        this.packet.ByteToPDU(this.receiveBuf);
-        System.out.println("RECEBI:\nNúmero de sequência " + this.packet.getSeqNumber() +
-                           "    Número de ACK " + this.packet.getAckNumber() +
-                           "    Flag Type " + this.packet.getFlagType() +
-                           "    PDU Type " + this.packet.getTypeOfPDU() +
-                           "    Mensagem do segmento " + this.packet.getMessagePacket() + 
-                           "    Total Bytes Mensagem " + this.packet.getLengthData() + 
-                           "    Port " + this.packet.getPort()
-        );
-        if(this.packet.getFlagType() == 4){
-            this.port = this.packet.getPort();
-        }
-        if(this.packet.getFlagType() == 2){
-            FileOutputStream fos = null;
-            if(this.packet.getSeqNumber() == 1){
-                File file = new File("./src/Client/file.txt");
-                file.createNewFile();
-                fos = new FileOutputStream(file);
-                fos.write(this.receiveBuf, 0, this.receiveBuf.length);
-            }
-        }
+    public void corram() throws UnknownHostException, SocketException{
+        AtomicBoolean transfer = new AtomicBoolean(true);
+        FileReceiver receiver = new FileReceiver(connResources, packetsList, transfer);
+        AckSender sender = new AckSender(connResources, packetsList, transfer);
+        receiver.start();
+        sender.start();
+
     }
-    
-    public void close() {
-        socket.close();
-    }
-    
+      
+    @Override
     public void run(){
-        try{
-            boolean running = true;
+        try {
             sendSynPacket();
-            while(running){
-                this.receiveBuf = new byte[256];
-                this.sendBuf = new byte[256];
-                receive();
-                if(this.packet.getFlagType() == 2 || this.packet.getFlagType() == 4){
-                    System.out.println("OLA");
-                    this.packet.sendACK();
-                    send(this.packet.PDUToByte());
-                }
-            }
-        
-        }
-        catch (IOException ex){
-        }
+            connResources.receive();
+            packet = connResources.getPacketReceive();
+            int newPort = packet.getPort();
+            System.out.println(newPort);
+
+                        System.out.println(connResources.getPortSend());
+
+            connResources.setPortSend(newPort);
+                        System.out.println(connResources.getPortSend());
+
+            packet.ackPacket();
+            connResources.send(packet);
+            System.out.println(connResources.getPortSend());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+        } 
     }
 }

@@ -21,7 +21,7 @@ public class ClientMain {
     public static void main(String[] args) throws IOException {
         System.out.println("Type the port number");
         input = scanner.nextLine();
-        ClientAgent client = new ClientAgent(Integer.parseInt(input));
+        ClientAgentUDP client = new ClientAgentUDP(Integer.parseInt(input));
         client.start();
         
         try {            
@@ -29,11 +29,15 @@ public class ClientMain {
             do {
                 //System.out.print("JOE > ");
                 input = scanner.nextLine();
-                pdu.sendProtocolar(input);
+                pdu.protocolarPacket(input);
                 client.setPacket(pdu);
                 client.send();
+                client.corram();
             } while (!input.equals("exit"));
-            client.closeConnection();
+            pdu = client.getPacket();
+            pdu.setFlagType(3);
+            client.setPacket(pdu);
+            client.send();
         } catch (Exception e) {
             e.printStackTrace();
         }

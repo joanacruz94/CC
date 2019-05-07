@@ -47,6 +47,15 @@ public class PDU {
         this.port = 0;
     }
     
+    public PDU(PDU packet){
+        this.seqNumber = packet.getSeqNumber();
+        this.ackNumber = packet.getAckNumber();
+        this.flagType = packet.getFlagType();
+        this.messagePacket = packet.getMessagePacket();
+        this.lengthData = packet.getLengthData();
+        this.port = packet.getPort();
+    }
+    
     static byte[] trim(byte[] bytes) {
         int i = bytes.length - 1;
         while (i >= 0 && bytes[i] == 0){
@@ -130,13 +139,16 @@ public class PDU {
             case 7:
                 result = "EXIT";
                 break;
+            case 8:
+                result = "LIST";
+                break;
             default:
                 result = "NOTHING";
         }
         return result;
     }
     
-    public void sendProtocolar(String message){
+    public void protocolarPacket(String message){
         String m = message.split(" ")[0];
         
         if(m.equals("download"))
@@ -151,7 +163,8 @@ public class PDU {
         this.setMessagePacket(message);
         this.setLengthData(message.getBytes().length);
     }
-        
+    
+    /* Ack like TCP
     public void sendACK(){
         int previousAck = this.ackNumber;
         this.setAckNumber(this.seqNumber + this.lengthData);
@@ -159,9 +172,16 @@ public class PDU {
         this.setFlagType(1);
         this.setMessagePacket("A");
         this.setLengthData(1);
+    }*/
+    
+    public void ackPacket(){
+        this.setAckNumber(this.seqNumber);
+        this.setFlagType(1);
+        this.setMessagePacket("A");
+        this.setLengthData(1);
     }
     
-    public void sendSYNACK(int clientPort){
+    public void synPacket(int clientPort){
         this.setSeqNumber(0);
         this.setAckNumber(1);
         this.setFlagType(4);
@@ -188,6 +208,11 @@ public class PDU {
         this.setLengthData(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 12, 16)).getInt());
         this.setPort(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 16, 20)).getInt());
         byte[] message = trim(dataPacket);
+        if(message.length >= 20)
         this.setMessagePacket(new String(ByteBuffer.wrap(Arrays.copyOfRange(message, 20, message.length)).array()));
+    }
+    
+    public PDU clone(){
+        return new PDU(this);
     }
 }

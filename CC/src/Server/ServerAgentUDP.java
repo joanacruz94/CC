@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 
 /**
  *
@@ -18,8 +19,9 @@ import java.net.UnknownHostException;
  */
 public class ServerAgentUDP extends Thread{
     private Resources connResources;
-    private int clientPort = 7771;
+    private int clientPort = 7778;
     private PDU packet;
+    private static Scanner scanner = new Scanner(System.in);
     
     public ServerAgentUDP() throws SocketException, UnknownHostException {
         connResources = new Resources(7777, InetAddress.getByName("localhost"));
@@ -28,26 +30,35 @@ public class ServerAgentUDP extends Thread{
     
     public void run() {
         boolean running = true;
+        String input = null;
         try {
             while(running) {
-                connResources.receive();
-                
-                packet = connResources.getPacket();
+                connResources.receive();                
+                packet = connResources.getPacketReceive();
                         
                 /* Método que declara o início de uma conexão
                  * Recebe um segmento do tipo SYN de um cliente
                  * Envia ao cliente um segmento do tipo SYN + ACK
                  */
                 if(packet.getFlagType() == 0){
-                    System.out.println("Accepted conection from client in port " + connResources.getPortSend() + " !");
-                    packet.sendSYNACK(clientPort);
-                    connResources.send(packet);
-                    System.out.println("The server now will answer to client in port " + clientPort);
-                    ClientHandler handler = new ClientHandler(clientPort++, packet);
-                    handler.start(); 
+                    System.out.println("Want to accept connection from client in address " +  connResources.getAddressSend().getHostAddress() +
+                            " and port " + connResources.getPortSend());
+                    input = scanner.nextLine();
+                    if(input.matches("(yes|y|sim)")){
+                        System.out.println("Accepted conection from client in address " +  connResources.getAddressSend() + " and port " + connResources.getPortSend() + "!");
+                        packet.synPacket(clientPort);
+                        connResources.send(packet);
+                        System.out.println("The server now will answer to client in port " + clientPort + "!");
+                        ClientHandler handler = new ClientHandler(clientPort++);
+                        handler.start();
+                    }
+                    else{
+                        System.out.println("Refused connection from client");
+                    }
                 }                                                
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 }
