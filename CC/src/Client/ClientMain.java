@@ -32,7 +32,10 @@ public class ClientMain {
                 pdu.protocolarPacket(input);
                 client.setPacket(pdu);
                 client.send();
-                client.corram();
+                if(input.matches("download [A-Za-z0-9.]+"))
+                    client.downloadFile();
+                if(input.matches("upload [A-Za-z0-9.]+"))
+                    client.uploadFile();
             } while (!input.equals("exit"));
             pdu = client.getPacket();
             pdu.setFlagType(3);

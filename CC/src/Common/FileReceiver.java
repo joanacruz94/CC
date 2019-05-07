@@ -13,6 +13,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -31,7 +32,7 @@ public class FileReceiver extends Thread{
         connResources = connection;
         packet = new PDU();
         packetsList = packets;
-        packetsFinal = new HashMap<>();
+        packetsFinal = new ConcurrentHashMap<>();
         transferComplete = transfer;
         buffer = new byte[256];
     }
@@ -52,14 +53,14 @@ public class FileReceiver extends Thread{
             }
             for(PDU pdu : packetsFinal.values()){
                 System.out.println("SEQ NUMB PDU" + pdu.getSeqNumber());
-                if(pdu.getSeqNumber() == 1){
+                /*if(pdu.getSeqNumber() == 1){
                     File file = new File("./src/Client/file.txt");
                     file.createNewFile();
                     fos = new FileOutputStream(file);
                 }
                 buffer = pdu.getMessagePacket().getBytes();
                 fos.write(buffer, dataFile, buffer.length);
-                dataFile += buffer.length;
+                dataFile += buffer.length;*/
             }
         } catch (Exception ex) {
             ex.printStackTrace();

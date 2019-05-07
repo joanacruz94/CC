@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-/**
+/*
  *
  * @author joanacruz
  */
@@ -47,7 +47,7 @@ public class ClientHandler extends Thread{
                             in.join();
                             out.join();
                             break;
-                    //TODO: Enviar lista de ficheiros
+                        //TODO: Enviar lista de ficheiros
                         case 8:
                             break;
                         case 7:

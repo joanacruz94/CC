@@ -53,13 +53,12 @@ public class FileSender extends Thread {
                     fis.skip(readData);
                     readData = fis.read(dataFile, 0, dataFile.length);
                     //packet.setAckNumber(seqNumber);
-
+                    if (readData == -1) {
+                        finished.set(false);
+                        break;
+                    }
                 }
-                // se não existirem mais dados para ler do ficheiro
-                if (readData == -1) {
-                    finished.set(false);
-                }
-
+                // se não existirem mais dados para ler do ficheiro               
                 packet.setFlagType(2);
                 packet.setSeqNumber(++seqNumber);
                 packet.setMessagePacket(new String(dataFile));
@@ -68,7 +67,7 @@ public class FileSender extends Thread {
                 connResources.send(packet);
                                 System.out.println("SeqNumber " + seqNumber);
             }
-            sleep(5000);
+            sleep(10000);
             while(packetsList.size()>0){
                 for(PDU pdu : packetsList.values())
                     connResources.send(pdu);

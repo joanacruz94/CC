@@ -32,17 +32,14 @@ public class AckSender extends Thread{
         packetsList = packets;
         transferComplete = transfer;
     }
-    
-    
+      
     @Override
     public void run(){
         try {
-            boolean running = true;
-            int dataFile = 0;
-            
             while(transferComplete.get()){
                 Collection<PDU> receivedPDUs = packetsList.values();
                 for(PDU pdu : receivedPDUs){
+                    System.out.println("SEQ NUMBER " + pdu.getSeqNumber());
                     packet = pdu;
                     packet.ackPacket();
                     connResources.send(packet);
