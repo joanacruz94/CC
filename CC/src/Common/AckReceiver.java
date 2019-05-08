@@ -19,11 +19,13 @@ public class AckReceiver extends Thread{
     private Resources connResources;
     private PDU packet;
     private Map<Integer, PDU> packetsList;
+    private AtomicBoolean endOfTransfer;
     
-    public AckReceiver(Resources connection, Map<Integer, PDU> packets) throws UnknownHostException, SocketException{
+    public AckReceiver(Resources connection, Map<Integer, PDU> packets, AtomicBoolean end) throws UnknownHostException, SocketException{
         connResources = connection;
         packet = new PDU();
         packetsList = packets;
+        endOfTransfer = end;
     }
     
     @Override
@@ -37,6 +39,11 @@ public class AckReceiver extends Thread{
                 packetsList.remove(ackNumber);
                 if(packetsList.isEmpty()) running = false;
             }
+            while(packet.getFlagType() != 3){
+                connResources.receive();
+                packet = connResources.getPacketReceive();
+            }
+            endOfTransfer.set(false);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

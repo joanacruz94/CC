@@ -22,13 +22,11 @@ public class AckSender extends Thread{
     private Resources connResources;
     private PDU packet;
     private Map<Integer, PDU> packetsList;
-    private byte[] buffer;
     private AtomicBoolean transferComplete;
     
     public AckSender(Resources connection, Map<Integer, PDU> packets, AtomicBoolean transfer) throws UnknownHostException, SocketException{
         connResources = connection;
         packet = new PDU();
-        buffer = new byte[256];
         packetsList = packets;
         transferComplete = transfer;
     }
@@ -39,13 +37,20 @@ public class AckSender extends Thread{
             while(transferComplete.get()){
                 Collection<PDU> receivedPDUs = packetsList.values();
                 for(PDU pdu : receivedPDUs){
-                    System.out.println("SEQ NUMBER " + pdu.getSeqNumber());
-                    packet = pdu;
-                    packet.ackPacket();
-                    connResources.send(packet);
-                    packetsList.remove(packet.getSeqNumber());
+                    if(pdu.getFlagType() == 2){    
+                        packet = pdu;
+                        packet.ackPacket();
+                        connResources.send(packet);
+                        packetsList.remove(packet.getSeqNumber());
+                    }
                 }
             }
+            packet = new PDU();
+            packet.setFlagType(3);
+            /*Uma merda, apenas por segurança*/
+            connResources.send(packet);
+            connResources.send(packet);
+            connResources.send(packet);
         } catch (Exception ex){
             ex.printStackTrace();
         } 

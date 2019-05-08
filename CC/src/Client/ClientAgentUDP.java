@@ -24,45 +24,41 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author joanacruz
  */
-public class ClientAgentUDP extends Thread{
-    private final int portSend = 7777;
+public class ClientAgentUDP {
+
+    private final int serverPort = 7777;
     private PDU packet;
     private Resources connResources;
-    private byte[] buffer;
     private Map<Integer, PDU> packetsList;
-    private static Scanner scanner = new Scanner(System.in);
-    private static String input;
-    
-    public ClientAgentUDP(int port) throws UnknownHostException, SocketException{
+
+    public ClientAgentUDP(String serverHost, int port) throws UnknownHostException, SocketException {
         packet = new PDU();
-        connResources = new Resources(port, InetAddress.getByName("localhost"));
-        connResources.setPortSend(portSend);
-        buffer = new byte[256];
-        input = null;
+        connResources = new Resources(port, InetAddress.getByName(serverHost));
+        connResources.setPortSend(serverPort);
     }
-    
-    public void setPacket(PDU pdu){
+
+    public void setPacket(PDU pdu) {
         packet = pdu;
     }
 
     public PDU getPacket() {
         return packet;
     }
-    
-    public void send() throws IOException{
+
+    public void send() throws IOException {
         connResources.send(packet);
     }
-    
-    private void sendSynPacket() throws IOException{
-        packet.setMessagePacket("S");
-        connResources.send(packet);
+
+    public void receive() throws IOException {
+        connResources.receive();
+        packet = connResources.getPacketReceive();
     }
-    
-    public void closeConnection(){
+
+    public void closeConnection() {
         connResources.close();
     }
-    
-    public void downloadFile() throws UnknownHostException, SocketException, InterruptedException{
+
+    public void downloadFile() throws UnknownHostException, SocketException, InterruptedException {
         packetsList = new ConcurrentHashMap<>();
         AtomicBoolean transfer = new AtomicBoolean(true);
         FileReceiver fileReceiver = new FileReceiver(connResources, packetsList, transfer);
@@ -71,9 +67,12 @@ public class ClientAgentUDP extends Thread{
         ackSender.start();
         fileReceiver.join();
         ackSender.join();
+        for (int i = 0; i < 3; i++) {
+            connResources.receive(500);
+        }
     }
-    
-    public void uploadFile() throws UnknownHostException, InterruptedException, SocketException{
+
+    /*public void uploadFile() throws UnknownHostException, InterruptedException, SocketException{
         packetsList = new ConcurrentHashMap<>();
         FileSender fileSender = new FileSender(connResources, packetsList);
         AckReceiver ackReceiver = new AckReceiver(connResources, packetsList);
@@ -81,20 +80,32 @@ public class ClientAgentUDP extends Thread{
         ackReceiver.start();
         fileSender.join();
         ackReceiver.join();      
-    }
-      
-    @Override
-    public void run(){
+    }*/
+    public boolean connect() {
         try {
-            sendSynPacket();
-            connResources.receive();
+            int attempts = 5;
+            while (attempts > 0) {
+                send();
+                if (connResources.receive(5000)) {
+                    break;
+                }
+                attempts--;
+
+            }
+            if (attempts == 0) {
+                return false;
+            }
+            packet.ackPacket();
+            connResources.send(packet);
+            connResources.send(packet);
+            connResources.send(packet);
             packet = connResources.getPacketReceive();
             int newPort = packet.getPort();
             connResources.setPortSend(newPort);
-            //packet.ackPacket();
-            //connResources.send(packet);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-        } 
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
     }
 }
