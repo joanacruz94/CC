@@ -46,15 +46,8 @@ public class ServerAgentUDP extends Thread{
                     input = scanner.nextLine();
                     if(input.matches("(yes|y|sim)")){
                         System.out.println("Accepted conection from client in address " +  connResources.getAddressSend() + " and port " + connResources.getPortSend() + "!");
-                        int attempts = 5;
-                        while (attempts > 0) {
-                            packet.synPacket(clientPort);
-                            connResources.send(packet);
-                            if (connResources.receive(3000)) {
-                                break;
-                            }
-                            attempts--;
-                        } 
+                        packet.synPacket(clientPort);
+                        connResources.sendAndExpect(packet, 3000, 5);
                         System.out.println("The server now will answer to client in port " + clientPort + "!");
                         ClientHandler handler = new ClientHandler(connResources.getAddressSend(), clientPort++);
                         handler.start();

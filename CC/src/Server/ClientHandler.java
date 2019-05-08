@@ -6,12 +6,15 @@
 package Server;
 
 import Common.AckReceiver;
+import Common.AckSender;
+import Common.FileReceiver;
 import Common.FileSender;
 import Common.PDU;
 import Common.Resources;
-
-import static Common.Resources.FILES_FOLDER;
+import static Common.Resources.FILES_FOLDER_CLIENT;
+import static Common.Resources.FILES_FOLDER_SERVER;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -42,21 +45,44 @@ public class ClientHandler extends Thread {
                     connResources.receive();
                     packet = connResources.getPacketReceive();
                     Map<Integer, PDU> packetsList = new ConcurrentHashMap<>();
-                    AtomicBoolean endOfTransfer = new AtomicBoolean(true);
-                    switch (packet.getFlagType()) {
+                    AtomicBoolean endOfTransfer = new AtomicBoolean(false);
+                    PDU ack = packet.clone();
+                    ack.ackPacket();
+                    connResources.send(ack);
+                    switch (packet.getFlagType()){
+                        /* Termina conexão */
+                        case 3:
+                            packet.ackPacket();
+                            connResources.sendAttemps(packet,3);
+                            System.out.println("Socket closed with ports " + packet.getPort() + " " + connResources.getPortSend()
+                            + " " + connResources.getSocket().getPort());
+                            connResources.close();
+                            running = false;
+                            break;
+                        /* Download de um ficheiro */
                         case 5:
-                            System.out.println("GET :  " + new String(packet.getFileData()));
                             String fileName = new String(packet.getFileData()).split(" ")[1];
                             AckReceiver in = new AckReceiver(connResources, packetsList, endOfTransfer);
-                            FileSender out = new FileSender(connResources, packetsList, endOfTransfer, fileName);
+                            FileSender out = new FileSender(connResources, packetsList, endOfTransfer, FILES_FOLDER_SERVER + fileName);
                             in.start();
                             out.start();
                             in.join();
                             out.join();
                             break;
-                        //TODO: Enviar lista de ficheiros
+                        /* Upload de um ficheiro */
+                        case 6:
+                            String file = new String(packet.getFileData()).split(" ")[1];
+                            AtomicBoolean transfer = new AtomicBoolean(true);
+                            FileReceiver fileReceiver = new FileReceiver(connResources, packetsList, transfer, FILES_FOLDER_SERVER + file);
+                            AckSender ackSender = new AckSender(connResources, packetsList, transfer);
+                            fileReceiver.start();
+                            ackSender.start();
+                            fileReceiver.join();
+                            ackSender.join();
+                            break;
+                        /* Lista de ficheiros */    
                         case 8:
-                            File folder = new File(FILES_FOLDER);
+                            File folder = new File(FILES_FOLDER_SERVER);
                             File[] listOfFiles = folder.listFiles();
                             String filesList = "";
                             for (int i = 0; i < listOfFiles.length; i++) {
@@ -65,22 +91,13 @@ public class ClientHandler extends Thread {
                                 }
                             }
                             packet.setLengthData(filesList.getBytes().length);
-                            System.out.println("GETTER LENGTH DATA " + packet.getLengthData());
                             packet.setFileData(filesList.getBytes());
                             connResources.send(packet);
                             break;
+                        /* Recebe PDU do tipo EXIT */
                         case 7:
-                            packet.ackPacket();
-                            connResources.send(packet);
                             packet.setFlagType(3);
                             connResources.send(packet);
-                            System.out.println("Socket closed with ports " + packet.getPort() + " " + connResources.getPortSend()
-                                    + " " + connResources.getSocket().getPort());
-                            connResources.close();
-                            running = false;
-                            break;
-                        case 3:
-                            System.out.println("\n\n A TUA BELHA\n");
                             break;
                         default:
                             break;

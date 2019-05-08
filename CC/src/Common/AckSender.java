@@ -5,9 +5,6 @@
  */
 package Common;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -47,9 +44,7 @@ public class AckSender extends Thread{
             }
             packet = new PDU();
             packet.setFlagType(3);
-            /*Uma merda, apenas por segurança*/
-            connResources.send(packet);
-            connResources.send(packet);
+            /* Uma merda, apenas por segurança */
             connResources.send(packet);
         } catch (Exception ex){
             ex.printStackTrace();

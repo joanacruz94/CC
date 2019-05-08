@@ -26,30 +26,28 @@ public class FileReceiver extends Thread {
     private Map<Integer, PDU> packetsFinal;
     private byte[] buffer;
     private AtomicBoolean transferComplete;
-    private String fileName;
+    private String path;
 
-    public FileReceiver(Resources connection, Map<Integer, PDU> packets, AtomicBoolean transfer, String fName) throws UnknownHostException, SocketException {
+    public FileReceiver(Resources connection, Map<Integer, PDU> packets, AtomicBoolean transfer, String FilePath) throws UnknownHostException, SocketException {
         connResources = connection;
         packet = new PDU();
         packetsList = packets;
         packetsFinal = new ConcurrentHashMap<>();
         transferComplete = transfer;
         buffer = new byte[1024];
-        fileName = fName;
+        path = FilePath;
     }
 
     @Override
     public void run() {
-        int dataFile = 0;
         try {
             FileOutputStream fos = null;
-            File file = new File("./src/Client/" + this.fileName);
+            File file = new File(path);
             file.createNewFile();
             fos = new FileOutputStream(file);
             while (transferComplete.get()) {
                 connResources.receive();
                 packet = connResources.getPacketReceive();
-
                 if (packet.getFlagType() == 2) {
                     long checksumReceived = packet.getChecksum();
                     CRC32 checksum = new CRC32();
@@ -60,7 +58,7 @@ public class FileReceiver extends Thread {
                         packetsList.put(packet.getSeqNumber(), packet.clone());
                         packetsFinal.put(packet.getSeqNumber(), packet.clone());
                     } else {
-                        System.out.println("Falha no checksum");
+                        System.out.println("Corrupted packet --> Checksum Failed");
                     }
                 }
                 if (packet.getFlagType() == 3) {
@@ -68,7 +66,6 @@ public class FileReceiver extends Thread {
                 }
 
             }
-
             for (int i = 1; i <= packetsFinal.size(); i++) {
                 PDU pdu = packetsFinal.get(i);
                 buffer = pdu.getFileData().clone();

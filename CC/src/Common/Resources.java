@@ -25,7 +25,8 @@ public class Resources {
     private PDU packetSend;
     private int portSend;
     private byte[] buffer;   
-    static public final String FILES_FOLDER = "./src/Server/Files/";
+    static public final String FILES_FOLDER_SERVER = "./src/Server/Files/";
+    static public final String FILES_FOLDER_CLIENT = "./src/Client/Files/";
 
     public Resources(int port, InetAddress address) throws SocketException {
         this.socket = new DatagramSocket(port);
@@ -76,17 +77,22 @@ public class Resources {
         this.packetSend = packetSend;
     }
 
-    public void receive() throws IOException {
-        DatagramPacket packet = new DatagramPacket(this.buffer, this.buffer.length);
-        this.socket.receive(packet);
-        this.address = packet.getAddress();
-        this.portSend = packet.getPort();
-        this.addressSend = packet.getAddress();
-        this.packetReceive.ByteToPDU(this.buffer);
-        Arrays.fill(this.buffer, (byte) 0);
-        printStateReceive();
+    public boolean receive(){
+        try {
+            DatagramPacket packet = new DatagramPacket(this.buffer, this.buffer.length);
+            this.socket.receive(packet);
+            this.address = packet.getAddress();
+            this.portSend = packet.getPort();
+            this.addressSend = packet.getAddress();
+            this.packetReceive.ByteToPDU(this.buffer);
+            Arrays.fill(this.buffer, (byte) 0);
+            printStateReceive();
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
     }
-
+    
     public boolean receive(int timeout) {
         int prevTimeout = -1;
         try {
@@ -121,21 +127,39 @@ public class Resources {
         Arrays.fill(this.buffer, (byte) 0);
         printStateSend();
     }
-
-    public void close() {
-        this.socket.close();
-    }
     
-    public boolean sendAndExpect(int timeout, PDU pdu){
+    public void sendAttemps(PDU pdu, int attemps){
+        while(attemps > 0){
+            try {
+                send(pdu);
+                attemps--;
+            } catch (IOException ex) {
+            }
+        }
+    }
+        
+    public boolean sendAndExpect(PDU pdu, int timeout, int attempts){
         try {
-            send(pdu);
-            return receive(timeout);
+            while (attempts > 0) {
+                send(pdu);
+                if (receive(timeout)) {
+                    break;
+                }
+                attempts--;
+            }
+            if (attempts == 0) {
+                return false;
+            }
+            return true;
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;
         }   
+    }   
+    
+    public void close() {
+        this.socket.close();
     }
-
 
     public void printStateReceive() {
         System.out.println("RECEIVE:\nSequence Number " + this.packetReceive.getSeqNumber()

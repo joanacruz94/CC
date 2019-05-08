@@ -33,17 +33,22 @@ public class AckReceiver extends Thread{
         boolean running = true;
         try {
             while(running){
-                connResources.receive();
+                if(!connResources.receive(1000)) System.out.println("Client probably is off");;
                 packet = connResources.getPacketReceive();
                 int ackNumber = packet.getAckNumber();
                 packetsList.remove(ackNumber);
                 if(packetsList.isEmpty()) running = false;
             }
+            /*packet = new PDU();
+            packet.setFlagType(3);
+            connResources.sendAndExpect(packet, 3000, 5);*/
+            /* Enquanto cliente não manda um FIN */
             while(packet.getFlagType() != 3){
                 connResources.receive();
                 packet = connResources.getPacketReceive();
             }
-            endOfTransfer.set(false);
+            endOfTransfer.set(true);
+            
         } catch (Exception ex) {
             ex.printStackTrace();
         }
