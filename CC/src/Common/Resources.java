@@ -12,7 +12,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
-
 /**
  *
  * @author joanacruz
@@ -25,8 +24,7 @@ public class Resources {
     private PDU packetReceive;
     private PDU packetSend;
     private int portSend;
-    private byte[] buffer;
-    
+    private byte[] buffer;   
     static public final String FILES_FOLDER = "./src/Server/Files/";
 
     public Resources(int port, InetAddress address) throws SocketException {
@@ -35,8 +33,7 @@ public class Resources {
         this.packetReceive = new PDU();
         this.packetSend = new PDU();
         this.portSend = 0;
-        this.buffer = new byte[1064];
-        //this.socket.setSoTimeout(60000);
+        this.buffer = new byte[1056];
     }
 
     public DatagramSocket getSocket() {
@@ -79,14 +76,6 @@ public class Resources {
         this.packetSend = packetSend;
     }
 
-    static public byte[] trim(byte[] bytes) {
-        int i = bytes.length - 1;
-        while (i >= 0 && bytes[i] == 0) {
-            --i;
-        }
-        return Arrays.copyOf(bytes, i + 1);
-    }
-
     public void receive() throws IOException {
         DatagramPacket packet = new DatagramPacket(this.buffer, this.buffer.length);
         this.socket.receive(packet);
@@ -123,7 +112,7 @@ public class Resources {
             return false;
         }
     }
-
+    
     public void send(PDU pdu) throws IOException {
         setPacketSend(pdu);
         this.buffer = this.packetSend.PDUToByte();
@@ -136,15 +125,25 @@ public class Resources {
     public void close() {
         this.socket.close();
     }
+    
+    public boolean sendAndExpect(int timeout, PDU pdu){
+        try {
+            send(pdu);
+            return receive(timeout);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }   
+    }
+
 
     public void printStateReceive() {
         System.out.println("RECEIVE:\nSequence Number " + this.packetReceive.getSeqNumber()
                 + "    ACK Number " + this.packetReceive.getAckNumber()
                 + "    Flag Type " + this.packetReceive.getFlagType()
                 + "    PDU Type " + this.packetReceive.getTypeOfPDU()
-                + "    Message Total Bytes " + trim(this.packetReceive.getFileData()).length
-                + "    Port Receive " + portSend
-                + "    Current Thread" + Thread.currentThread().getName());
+                + "    Message Total Bytes " + this.packetReceive.getFileData().length
+                + "    Port Receive " + portSend);
     }
 
     public void printStateSend() {
@@ -152,9 +151,8 @@ public class Resources {
                 + "    ACK Number " + this.packetSend.getAckNumber()
                 + "    Flag Type " + this.packetSend.getFlagType()
                 + "    PDU Type " + this.packetSend.getTypeOfPDU()
-                + "    Message Total Bytes " + trim(this.packetSend.getFileData()).length
-                + "    Port Send " + portSend
-                + "    Current Thread" + Thread.currentThread().getName());
+                + "    Message Total Bytes " + this.packetSend.getFileData().length
+                + "    Port Send " + portSend);
     }
 
 }

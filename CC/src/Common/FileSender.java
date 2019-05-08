@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,20 +48,17 @@ public class FileSender extends Thread {
             fis = new FileInputStream(new File(FILES_FOLDER + fileName));
 
             while (!finished.get()) {
-                Arrays.fill(dataFile, (byte)0);
-                if (seqNumber == 0) {
-                    packet.setFileName(fileName.getBytes());
-                    readData = fis.read(dataFile);
-                } else {
-                    readData = fis.read(dataFile);
-                    // se não existirem mais dados para ler do ficheiro
-                    if (readData == -1) {
-                        finished.set(true);
-                        break;
-                    }
+                Arrays.fill(dataFile, (byte) 0);
+                readData = fis.read(dataFile);
+                // se não existirem mais dados para ler do ficheiro
+                if (readData == -1) {
+                    finished.set(true);
+                    break;
                 }
+
                 packet.setFlagType(2);
                 packet.setSeqNumber(++seqNumber);
+                packet.setLengthData(readData);
                 packet.setFileData(dataFile);
                 CRC32 checksum = new CRC32();
                 checksum.update(packet.getSeqNumber());
@@ -70,7 +66,7 @@ public class FileSender extends Thread {
                 packet.setChecksum(checksum.getValue());
                 packetsList.put(seqNumber, packet.clone());
                 connResources.send(packet);
-                
+
             }
             sleep(500);
             while (packetsList.size() > 0) {
@@ -83,6 +79,7 @@ public class FileSender extends Thread {
                 packet.setFlagType(3);
                 connResources.send(packet);
             }
+            fis.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

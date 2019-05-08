@@ -5,7 +5,6 @@
  */
 package Common;
 
-import static Common.Resources.trim;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -19,8 +18,9 @@ public class PDU {
     private int ackNumber;
     private int flagType;
     private int port;
+    private int windowSize;
+    private int lengthData;
     private long checksum;
-    private byte[] fileName;
     private byte[] fileData;
 
     public PDU() {
@@ -28,8 +28,9 @@ public class PDU {
         this.ackNumber = 0;
         this.flagType = 0;
         this.port = 0;
+        this.windowSize = 0;
+        this.lengthData = 0;
         this.checksum = 0;
-        this.fileName = new byte[16];
         this.fileData = new byte[1024];
     }
 
@@ -38,8 +39,9 @@ public class PDU {
         this.ackNumber = packet.getAckNumber();
         this.flagType = packet.getFlagType();
         this.port = packet.getPort();
+        this.windowSize = packet.getWindowSize();
+        this.lengthData = packet.getLengthData();
         this.checksum = packet.getChecksum();
-        this.fileName = packet.getFileName();
         this.fileData = packet.getFileData();
     }
 
@@ -75,7 +77,32 @@ public class PDU {
         this.port = port;
     }
 
-    public byte[] getFileName() {
+    public int getWindowSize() {
+        return windowSize;
+    }
+
+    public void setWindowSize(int windowSize) {
+        this.windowSize = windowSize;
+    }
+
+    public int getLengthData() {
+        return lengthData;
+    }
+
+    public void setLengthData(int lengthData) {
+        this.lengthData = lengthData;
+        System.out.println("SETTER LENGTH DATA " + this.lengthData);
+    }
+    
+    public long getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(long checksum) {
+        this.checksum = checksum;
+    }
+
+    /*public byte[] getFileName() {
         return trim(fileName.clone());
     }
 
@@ -89,22 +116,16 @@ public class PDU {
             this.fileName[i] = 0;
             i++;
         }
-    }
+    }*/
 
     public byte[] getFileData() {
-        return trim(fileData.clone());
+        byte[] res = Arrays.copyOf(this.fileData, this.lengthData);
+        return res;
     }
 
     public void setFileData(byte[] fileData) {
-        this.fileData = fileData;
-    }
-
-    public long getChecksum() {
-        return checksum;
-    }
-
-    public void setChecksum(long checksum) {
-        this.checksum = checksum;
+        this.fileData = Arrays.copyOf(fileData, this.lengthData);
+        System.out.println("File Data " + this.getLengthData());
     }
 
     public String getTypeOfPDU() {
@@ -158,6 +179,8 @@ public class PDU {
 
         this.setAckNumber(1);
         this.setSeqNumber(1);
+        this.setLengthData(message.getBytes().length);
+        
         this.setFileData(message.getBytes());
     }
 
@@ -183,13 +206,15 @@ public class PDU {
     }
 
     public byte[] PDUToByte() {
-        ByteBuffer buffer = ByteBuffer.allocate(1064);
+        ByteBuffer buffer = ByteBuffer.allocate(1056);
         buffer.put(ByteBuffer.allocate(4).putInt(this.getSeqNumber()).array());
         buffer.put(ByteBuffer.allocate(4).putInt(this.getAckNumber()).array());
         buffer.put(ByteBuffer.allocate(4).putInt(this.getFlagType()).array());
         buffer.put(ByteBuffer.allocate(4).putInt(this.getPort()).array());
+        buffer.put(ByteBuffer.allocate(4).putInt(this.getWindowSize()).array());
+        buffer.put(ByteBuffer.allocate(4).putInt(this.getLengthData()).array());
         buffer.put(ByteBuffer.allocate(8).putLong(this.getChecksum()).array());
-        buffer.put(ByteBuffer.allocate(16).put(this.getFileName()).array());
+        //buffer.put(ByteBuffer.allocate(16).put(this.getFileName()).array());
         buffer.put(ByteBuffer.allocate(1024).put(this.getFileData()).array());
 
         return buffer.array();
@@ -200,9 +225,11 @@ public class PDU {
         this.setAckNumber(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 4, 8)).getInt());
         this.setFlagType(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 8, 12)).getInt());
         this.setPort(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 12, 16)).getInt());
-        this.setChecksum(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 16, 24)).getLong());
-        this.setFileName(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 24, 40)).array());
-        this.setFileData(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 40, dataPacket.length)).array());
+        this.setWindowSize(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 16, 20)).getInt());
+        this.setLengthData(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 20, 24)).getInt());
+        this.setChecksum(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 24, 32)).getLong());
+        //this.setFileName(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 24, 40)).array());
+        this.setFileData(ByteBuffer.wrap(Arrays.copyOfRange(dataPacket, 32, dataPacket.length)).array());
     }
 
     public PDU clone() {

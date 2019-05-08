@@ -5,7 +5,6 @@
  */
 package Common;
 
-import static Common.Resources.trim;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.SocketException;
@@ -27,21 +26,26 @@ public class FileReceiver extends Thread {
     private Map<Integer, PDU> packetsFinal;
     private byte[] buffer;
     private AtomicBoolean transferComplete;
+    private String fileName;
 
-    public FileReceiver(Resources connection, Map<Integer, PDU> packets, AtomicBoolean transfer) throws UnknownHostException, SocketException {
+    public FileReceiver(Resources connection, Map<Integer, PDU> packets, AtomicBoolean transfer, String fName) throws UnknownHostException, SocketException {
         connResources = connection;
         packet = new PDU();
         packetsList = packets;
         packetsFinal = new ConcurrentHashMap<>();
         transferComplete = transfer;
         buffer = new byte[1024];
+        fileName = fName;
     }
 
     @Override
     public void run() {
         int dataFile = 0;
-        FileOutputStream fos = null;
         try {
+            FileOutputStream fos = null;
+            File file = new File("./src/Client/" + this.fileName);
+            file.createNewFile();
+            fos = new FileOutputStream(file);
             while (transferComplete.get()) {
                 connResources.receive();
                 packet = connResources.getPacketReceive();
@@ -64,19 +68,15 @@ public class FileReceiver extends Thread {
                 }
 
             }
-            
-            for (PDU pdu : packetsFinal.values()) {
-                if (pdu.getSeqNumber() == 1) {
-                    String fileName = new String(pdu.getFileName());
-                    File file = new File("./src/Client/" + fileName);
-                    file.createNewFile();
-                    fos = new FileOutputStream(file);
-                }
-                buffer = pdu.getFileData();
-                fos.write(buffer, 0, trim(buffer).length);
-                buffer = new byte[1024];
+
+            for (int i = 1; i <= packetsFinal.size(); i++) {
+                PDU pdu = packetsFinal.get(i);
+                buffer = pdu.getFileData().clone();
+                fos.write(buffer, 0, pdu.getLengthData());
                 //dataFile += buffer.length;
             }
+            fos.flush();
+            fos.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

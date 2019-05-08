@@ -5,18 +5,15 @@
  */
 package Client;
 
-import Common.AckReceiver;
 import Common.PDU;
 import Common.FileReceiver;
 import Common.Resources;
 import Common.AckSender;
-import Common.FileSender;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -58,10 +55,10 @@ public class ClientAgentUDP {
         connResources.close();
     }
 
-    public void downloadFile() throws UnknownHostException, SocketException, InterruptedException {
+    public void downloadFile(String fileName) throws UnknownHostException, SocketException, InterruptedException {
         packetsList = new ConcurrentHashMap<>();
         AtomicBoolean transfer = new AtomicBoolean(true);
-        FileReceiver fileReceiver = new FileReceiver(connResources, packetsList, transfer);
+        FileReceiver fileReceiver = new FileReceiver(connResources, packetsList, transfer, fileName);
         AckSender ackSender = new AckSender(connResources, packetsList, transfer);
         fileReceiver.start();
         ackSender.start();

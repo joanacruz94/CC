@@ -9,7 +9,6 @@ import Common.AckReceiver;
 import Common.FileSender;
 import Common.PDU;
 import Common.Resources;
-import static Common.Resources.trim;
 
 import static Common.Resources.FILES_FOLDER;
 import java.io.File;
@@ -29,7 +28,7 @@ public class ClientHandler extends Thread {
 
     private Resources connResources;
     private PDU packet;
-    
+
     ClientHandler(InetAddress addressSend, int port) throws UnknownHostException, SocketException {
         connResources = new Resources(port, addressSend);
     }
@@ -46,6 +45,7 @@ public class ClientHandler extends Thread {
                     AtomicBoolean endOfTransfer = new AtomicBoolean(true);
                     switch (packet.getFlagType()) {
                         case 5:
+                            System.out.println("GET :  " + new String(packet.getFileData()));
                             String fileName = new String(packet.getFileData()).split(" ")[1];
                             AckReceiver in = new AckReceiver(connResources, packetsList, endOfTransfer);
                             FileSender out = new FileSender(connResources, packetsList, endOfTransfer, fileName);
@@ -64,6 +64,8 @@ public class ClientHandler extends Thread {
                                     filesList += listOfFiles[i].getName() + ";";
                                 }
                             }
+                            packet.setLengthData(filesList.getBytes().length);
+                            System.out.println("GETTER LENGTH DATA " + packet.getLengthData());
                             packet.setFileData(filesList.getBytes());
                             connResources.send(packet);
                             break;

@@ -42,7 +42,7 @@ public class ClientMain {
                 client.setPacket(pdu);
                 client.send();
                 if(input.matches("download [A-Za-z0-9._]+")) {
-                    client.downloadFile();
+                    client.downloadFile(input.split(" ")[1]);
                 }
                 if(input.equals("list")){
                     client.receive();
@@ -50,6 +50,14 @@ public class ClientMain {
                     String[] filesList = new String(pdu.getFileData()).split(";");
                     System.out.println("Files List");
                     for(String file : filesList) System.out.println(file);
+                }
+                if(input.equals("help")){
+                    System.out.println("---------------- HELP MENU ----------------\n" +
+                                       "Comands                                    \n" +
+                                       "download <fileName>                        \n" +
+                                       "upload <fileName>                          \n" +
+                                       "list                                       \n" +
+                                       "exit                                         ");
                 }
                 
                 //if(input.matches("upload [A-Za-z0-9.]+"))
