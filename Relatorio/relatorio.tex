@@ -94,10 +94,10 @@ O serviço de transferência rápida e fiável de dados foi implementado, a nív
 \subsection{Interação}
 
 O nosso sistema de transferência é caracterizado por três fases distintas durante uma conexão:
-  \begin{enumerate}
-  \item \textbf{Início da conexão}
- Para o início de uma conexão ,o nosso sistema foi baseado no 3-Way Handshake do TCP.\\
- Sendo que esta conexão procede do seguinte modo:
+\begin{enumerate}
+\item \textbf{Início da conexão}
+Para o início de uma conexão o nosso sistema foi baseado no 3-Way Handshake do TCP.\\
+Sendo que esta conexão procede do seguinte modo:
 
 \begin{table}[h!]
 \centering
@@ -105,10 +105,10 @@ O nosso sistema de transferência é caracterizado por três fases distintas dur
 \hline
 \textbf{Início da Conexão} \\ [0.5ex] 
 \hline\hline
-Host A sends a \textbf{SYN}chronize packet to Host B \\ 
-Host B receives A's \textbf{SYN}  \\
-Host B sends a \textbf{SYN}chronize-\textbf{ACK}nowledgment\\
-Host A receives B's \textbf{SYN-ACK}\\
+Host A sends \textbf{SYN}chronize packet to Host B \\ 
+Host B receives  \textbf{SYN}  \\
+Host B sends  \textbf{SYN}chronize-\textbf{ACK}nowledgment\\
+Host A receives  \textbf{SYN-ACK}\\
 Host A sends \textbf{ACK}nowledgment \\
 Host B receives \textbf{ACK}\\ 
 \hline
@@ -135,22 +135,30 @@ lado da ligação.\\
 \textbf{Término da Conexão} \\ [0.5ex] 
 \hline\hline
 Host A sends a \textbf{FIN}ished packet to Host B \\ 
-Host B receives A's \textbf{FIN}ished  \\
-Host B sends a \textbf{ACK}nowledgment\\
+Host B receives  \textbf{FIN}ished  \\
+Host B sends  \textbf{ACK}nowledgment\\
 Host A receives \textbf{ACK}nowledgment\\
 Host B sends \textbf{FIN}ished packet to Host A \\
 Host A receives \textbf{FIN}ished\\
-Host A sends a \textbf{ACK}nowledgment\\
-Host B receives A's \textbf{ACK}nowledgment  \\
+Host A sends  \textbf{ACK}nowledgment\\
+Host B receives \textbf{ACK}nowledgment  \\
 \hline
 \end{tabular}
-\caption{Início da conexão}
-\label{table:1}
+\caption{Término da conexão}
+\label{table:2}
 \end{table}
 \end{enumerate}
 
 
 \newpage
+
+
+
+
+
+
+
+
 
 \section{Implementação}
 
@@ -167,16 +175,50 @@ A arquitetura da solução implementada encontra-se descrita na figura apresenta
 
 \subsection{Estrutura de dados}
 
-Para a implementação destes conceitos, foi utilizada a linguagem de programação orientada a objetivos \emph{Java}, e definidas as seguintes classes:
-
+Para a implementação destes conceitos, foi utilizada a linguagem de programação orientada a objectos \emph{Java}, e foram definidas as seguintes classes:
+\begin{itemize}
+\item \textbf{ClientAgentUDP}:
+\item \textbf{ServerAgentUDP}:
+\item \textbf{PDU}:
+\item \textbf{...}
+\item \textbf{...}
+\item \textbf{...}
+\end{itemize}
 
 \subsection{Métodos}
 
+De modo a não tornar esta leitura exaustiva , decidiu-se simplesmente apresentar os métodos mais relevantes
+e procurar explicar o impacto que cada um tem na implementação do nosso serviço.
 
-\subsection{Parâmetros}
+\begin{enumerate}
 
+\item \textbf{Método da Joaninha de DSS}
+\item \textbf{Método da Joaninha do Pintas}
+\item \textbf{Método da Grande Líder}
+
+\end{enumerate}
 
 \subsection{Bibliotecas de suporte}
+
+Sendo java uma linguagem de programação bastante versátil foi possível importar todas as bibliotecas que permitissem a realização 
+deste projecto,sendo elas as seguintes:
+
+\begin{itemize}
+\item{import java.io.IOException;}
+\item{import java.net.InetAddress;}
+\item{import java.net.SocketException;}
+\item{import java.net.UnknownHostException;}
+\item{import java.util.concurrent.ConcurrentHashMap;}
+\item{import java.util.concurrent.atomic.AtomicBoolean;}
+\item{import java.util.logging.Level;}
+\item{import java.util.logging.Logger;}
+\item{import java.net.SocketException;}
+\end{itemize}
+
+\newpage
+
+
+\section{Funcionalidades Adicionais}
 
 
 \newpage
