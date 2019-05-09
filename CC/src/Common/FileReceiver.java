@@ -61,7 +61,7 @@ public class FileReceiver extends Thread {
                         System.out.println("Corrupted packet --> Checksum Failed");
                     }
                 }
-                if (packet.getFlagType() == 3) {
+                if (packet.getFlagType() == 9) {
                     transferComplete.set(false);
                 }
 
@@ -70,7 +70,6 @@ public class FileReceiver extends Thread {
                 PDU pdu = packetsFinal.get(i);
                 buffer = pdu.getFileData().clone();
                 fos.write(buffer, 0, pdu.getLengthData());
-                //dataFile += buffer.length;
             }
             fos.flush();
             fos.close();

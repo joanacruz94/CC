@@ -140,6 +140,9 @@ public class PDU {
             case 8:
                 result = "LIST";
                 break;
+            case 9:
+                result = "END TRANSF";
+                break;
             default:
                 result = "NOTHING";
         }

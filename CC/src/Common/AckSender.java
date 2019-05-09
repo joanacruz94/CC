@@ -43,9 +43,8 @@ public class AckSender extends Thread{
                 }
             }
             packet = new PDU();
-            packet.setFlagType(3);
-            /* Uma merda, apenas por segurança */
-            connResources.send(packet);
+            packet.setFlagType(9);
+            connResources.sendAttemps(packet, 3);
         } catch (Exception ex){
             ex.printStackTrace();
         } 

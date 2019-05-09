@@ -1,3 +1,4 @@
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -39,16 +40,9 @@ public class AckReceiver extends Thread{
                 packetsList.remove(ackNumber);
                 if(packetsList.isEmpty()) running = false;
             }
-            /*packet = new PDU();
-            packet.setFlagType(3);
-            connResources.sendAndExpect(packet, 3000, 5);*/
-            /* Enquanto cliente não manda um FIN */
-            while(packet.getFlagType() != 3){
-                connResources.receive();
-                packet = connResources.getPacketReceive();
-            }
-            endOfTransfer.set(true);
-            
+            packet = new PDU();
+            packet.setFlagType(9);
+            if(connResources.sendAndExpect(packet, 1000, 5) && connResources.getPacketReceive().getFlagType() == 9) endOfTransfer.set(true);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -27,6 +27,7 @@ public class FileSender extends Thread {
     private final AtomicBoolean finished;
     private AtomicBoolean endOfTransfer;
     private String path;
+    private int windowSize;
 
     public FileSender(Resources connection, Map<Integer, PDU> packets, AtomicBoolean end, String filePath) throws UnknownHostException, SocketException {
         connResources = connection;
@@ -64,17 +65,13 @@ public class FileSender extends Thread {
                 packet.setChecksum(checksum.getValue());
                 packetsList.put(seqNumber, packet.clone());
                 connResources.send(packet);
+                if(seqNumber % 10 == 0) sleep(20);
             }
-            sleep(1000);
+            sleep(600);
             while (packetsList.size() > 0) {
                 for (PDU pdu : packetsList.values()) {
                     connResources.send(pdu);
                 }
-            }
-            packet = new PDU();
-            while (!endOfTransfer.get()) {
-                packet.setFlagType(3);
-                connResources.send(packet);
             }
             fis.close();
         } catch (Exception ex) {
