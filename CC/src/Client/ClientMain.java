@@ -21,10 +21,10 @@ public class ClientMain {
     public static void main(String[] args) throws IOException {
         String serverHost = "localhost";
         int clientPort = 5000;
-        if (args.length > 1) {
+        if (args.length > 0) {
             serverHost = args[0];
         }
-        if (args.length > 2) {
+        if (args.length > 1) {
             clientPort = Integer.parseInt(args[1]);
         }
         ClientAgentUDP client = new ClientAgentUDP(serverHost, clientPort);

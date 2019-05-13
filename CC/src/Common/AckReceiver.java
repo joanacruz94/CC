@@ -6,7 +6,6 @@
  */
 package Common;
 
-import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Map;
@@ -34,7 +33,7 @@ public class AckReceiver extends Thread{
         boolean running = true;
         try {
             while(running){
-                if(!connResources.receive(1000)) System.out.println("Client probably is off");;
+                if(!connResources.receive(1000)) System.out.println("TimeOut !");;
                 packet = connResources.getPacketReceive();
                 int ackNumber = packet.getAckNumber();
                 packetsList.remove(ackNumber);

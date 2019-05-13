@@ -167,6 +167,7 @@ public class Resources {
                 + "    Flag Type " + this.packetReceive.getFlagType()
                 + "    PDU Type " + this.packetReceive.getTypeOfPDU()
                 + "    Message Total Bytes " + this.packetReceive.getFileData().length
+                + "    Address Receive " + this.address
                 + "    Port Receive " + portSend);
     }
 
@@ -176,6 +177,7 @@ public class Resources {
                 + "    Flag Type " + this.packetSend.getFlagType()
                 + "    PDU Type " + this.packetSend.getTypeOfPDU()
                 + "    Message Total Bytes " + this.packetSend.getFileData().length
+                + "    Address Send " + this.addressSend
                 + "    Port Send " + portSend);
     }
 

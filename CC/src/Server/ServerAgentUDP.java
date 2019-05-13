@@ -7,8 +7,6 @@ package Server;
 
 import Common.PDU;
 import Common.Resources;
-import java.io.IOException;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
